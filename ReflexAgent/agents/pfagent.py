@@ -27,10 +27,9 @@ class PFAgent(Agent):
 
 
         return d_x, d_y
-    
-    def calculate_obstacle_radius():
-        pass
+        
 
+        
     def calculate_obstacle_delta(self, beta, theta, distance, r):
         d_x,d_y = 0, 0
         s = 4
@@ -44,6 +43,7 @@ class PFAgent(Agent):
 
         return d_x, d_y
     def act(self, robot_pos, goal_pos, dist_sensors):
+        
         x_dir,y_dir = self.calculate_vector(robot_pos[0],goal_pos[0],robot_pos[1],goal_pos[1])
         
         distance = math.sqrt(x_dir**2 + y_dir**2)
@@ -54,21 +54,20 @@ class PFAgent(Agent):
             theta,
             distance,
             GOAL_RADIUS
-            )
+        )
 
         trajectory = [change_in_x,change_in_y]
 
         for i in range(len(dist_sensors)):
             curr_angle = (i * ANGLE_BETWEEN_SENSORS) + robot_pos[2]
-
-            obs_theta = (((curr_angle) * math.pi) / 180.0) 
+            obs_theta = ((curr_angle) * math.pi) / 180.0 
             beta = 1.2
             obs_d_x, obs_d_y = self.calculate_obstacle_delta(
                 beta, 
                 obs_theta, 
                 dist_sensors[i], 
-                OBSTACLE_RADIUS
-                )
+                6
+            )
             trajectory[0] += obs_d_x
             trajectory[1] += obs_d_y
 
