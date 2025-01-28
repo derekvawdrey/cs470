@@ -1,8 +1,14 @@
 import numpy as np
 import pandas as pd
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn import svm
 import pickle  as pkl
 import os
+from sklearn.svm import SVC
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
+from sklearn.ensemble import RandomForestClassifier
+
 
 from .baseagent import Agent
 
@@ -14,29 +20,35 @@ def rotation_matrix(angle_radians):
 
 class MLAgent(Agent):
     def __init__(self):
-        model_path = './models/agent_mdl.pkl'
+        model_path = './models/small17.pkl'
         load_success = self.load(model_path)
         if not load_success:
-            # TODO: generate your own data
-            df = pd.read_csv(f'./data/robot_recording_sample.csv')
+            df = pd.read_csv(f'./data/robot_recording_01-27-2025_10-17-12.csv')
 
             # Here is an example of feature engineering
             # This creates features to encode the robots rotation in radians and as well as in an xy heading format
             # these may or may not be useful
-            # TODO: try engineering different features, consider what would be useful and most general
             df['robot_dir_rads'] = np.radians(df['robot_pos_theta'])
             df['robot_dir_x'] = np.cos(df['robot_dir_rads'])
             df['robot_dir_y'] = np.sin(df['robot_dir_rads'])
-
+            df['distance_from_goal'] =  np.where(np.sqrt(np.square(df['goal_pos_x'] - df['robot_pos_x']) + np.square(df['goal_pos_y'] - df['robot_pos_y'])) > 3, 1, 0)
+            
+            sensor_columns = [
+                'dist_sensor_0', 'dist_sensor_1', 'dist_sensor_2', 'dist_sensor_3',
+                'dist_sensor_4', 'dist_sensor_5', 'dist_sensor_6', 'dist_sensor_7',
+                'dist_sensor_8', 'dist_sensor_9', 'dist_sensor_10', 'dist_sensor_11',
+                'dist_sensor_12', 'dist_sensor_13', 'dist_sensor_14', 'dist_sensor_15'
+            ]
+            df['blocked_forward'] = (df[sensor_columns[3:5]] < 6).any(axis=1).astype(int)
             print(df.columns)
 
-            # TODO: try removing features or adding your own engineered features
             default_features = ['robot_pos_x', 'robot_pos_y', 'robot_pos_theta', 'goal_pos_x',
-                'goal_pos_y', 'dist_sensor_0', 'dist_sensor_1', 'dist_sensor_2',
-                'dist_sensor_3', 'dist_sensor_4', 'dist_sensor_5', 'dist_sensor_6',
-                'dist_sensor_7', 'dist_sensor_8', 'dist_sensor_9', 'dist_sensor_10',
-                'dist_sensor_11', 'dist_sensor_12', 'dist_sensor_13', 'dist_sensor_14',
-                'dist_sensor_15']
+                'goal_pos_y', 'dist_sensor_0', 'dist_sensor_1', 'dist_sensor_2', 'dist_sensor_3',
+                'dist_sensor_4', 'dist_sensor_5', 'dist_sensor_6', 'dist_sensor_7',
+                'dist_sensor_8', 'dist_sensor_9', 'dist_sensor_10', 'dist_sensor_11',
+                'dist_sensor_12', 'dist_sensor_13', 'dist_sensor_14', 'dist_sensor_15', 
+                'robot_dir_rads', 'robot_dir_x', 'robot_dir_y',
+                'distance_from_goal', 'blocked_forward', ]
 
             restricted_features = ['dist_sensor_0', 'dist_sensor_1', 'dist_sensor_2',
                 'dist_sensor_3', 'dist_sensor_4', 'dist_sensor_5', 'dist_sensor_6',
@@ -55,7 +67,7 @@ class MLAgent(Agent):
             Y = df[labels].to_numpy().flatten()
 
             # TODO: try different ml models with different parameters see the README for more info
-            self.model = KNeighborsClassifier(n_neighbors=2, weights='distance')
+            self.model = RandomForestClassifier(n_estimators=100, min_samples_split=5,max_depth=20)
 
             self.train(X, Y)
 
@@ -68,13 +80,18 @@ class MLAgent(Agent):
         print("Done")
 
     def act(self, robot_pos, goal_pos, dist_sensors):
-        # TODO: make sure you compute the same engineered feaures your ml model expects
         robot_theta = np.radians(robot_pos[2])
         robot_dir_x = np.cos(robot_theta)
         robot_dir_y = np.sin(robot_theta)
 
-        # TODO: make sure your feature vector matches what your model was trained with
-        default_feature_vec = [*robot_pos, *goal_pos, *dist_sensors]
+        distance_from_goal = np.where(np.sqrt(
+            np.square(goal_pos[0] - robot_pos[0]) + 
+            np.square(goal_pos[1] - robot_pos[1])
+        ) > 3, 1, 0)
+
+        blocked_forward = int(np.any(np.array(dist_sensors[3:5]) < 6))
+        print(blocked_forward)
+        default_feature_vec = [*robot_pos, *goal_pos, *dist_sensors,robot_theta,robot_dir_x,robot_dir_y, distance_from_goal, blocked_forward]
         restricted_feature_vec = [*dist_sensors, robot_dir_x, robot_dir_y]
         
         result = self.model.predict([np.array(default_feature_vec)])
