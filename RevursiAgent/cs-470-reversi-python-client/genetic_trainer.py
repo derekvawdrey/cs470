@@ -30,8 +30,8 @@ class GeneticTrainer:
     def evaluate_fitness(self, bot1_weights, bot2_weights, bot1_max_depth, bot2_max_depth):
         """Play multiple games between two bots and return win ratio for bot1"""
         bot1_wins = 0
-        bot1_timer = 60
-        bot2_timer = 60
+        bot1_timer = 60  # Black's timer
+        bot2_timer = 60  # White's timer
         
         def print_board_and_stats(state, bot1_timer, bot2_timer):
             """Helper function to print board and statistics"""
@@ -98,16 +98,17 @@ class GeneticTrainer:
                             move = current_bot.make_move(state)
                             time_taken = time.time() - start_time
                             
+                            # Only subtract time from the current player's timer
                             if state.turn == 1:
                                 bot1_timer -= time_taken
                                 if bot1_timer <= 0:
-                                    print("Bot 1 ran out of time!")
+                                    print("Bot 1 (Black) ran out of time!")
                                     return 0
-                                else:
-                                    bot2_timer -= time_taken
-                                    if bot2_timer <= 0:
-                                        print("Bot 2 ran out of time!")
-                                        return 1
+                            else:
+                                bot2_timer -= time_taken
+                                if bot2_timer <= 0:
+                                    print("Bot 2 (White) ran out of time!")
+                                    return 1
                             
                             if move:
                                 move_count += 1
@@ -188,17 +189,33 @@ class GeneticTrainer:
                 new_weights.append(weight)
         return {'weights': new_weights, 'fitness': 0}
     
-    def save_progress(self, generation):
-        """Save the current best weights and training progress"""
-        data = {
+    def save_progress(self, generation, best_weights, best_fitness, best_max_depth):
+        """Save the training progress to a file"""
+        progress = {
             'generation': generation,
-            'best_weights': self.population[0]['weights'],
-            'best_fitness': self.population[0]['fitness'],
-            'weights_history': self.best_weights_history
+            'best_weights': best_weights,
+            'best_fitness': best_fitness,
+            'best_max_depth': best_max_depth,
+            'weights_history': []
         }
         
+        try:
+            with open('training_progress.json', 'r') as f:
+                old_progress = json.load(f)
+                progress['weights_history'] = old_progress.get('weights_history', [])
+        except FileNotFoundError:
+            pass
+        
+        # Add current generation to history
+        progress['weights_history'].append({
+            'generation': generation,
+            'weights': best_weights,
+            'fitness': best_fitness,
+            'max_depth': best_max_depth
+        })
+        
         with open('training_progress.json', 'w') as f:
-            json.dump(data, f)
+            json.dump(progress, f)
     
     def load_progress(self):
         """Load previous training progress if it exists"""
@@ -236,7 +253,7 @@ class GeneticTrainer:
             
             # Save progress every 5 generations
             if generation % 5 == 0:
-                self.save_progress(generation)
+                self.save_progress(generation, self.population[0]['weights'], self.population[0]['fitness'], self.population[0]['max_depth'])
             
             # Create new population
             new_population = []
