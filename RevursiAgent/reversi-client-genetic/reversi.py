@@ -163,7 +163,7 @@ class ReversiGameState:
         for i in range(self.board_dim):
             for j in range(self.board_dim):
                 if self.board[i, j] == turn:
-                    total += self.positionValues[i][j]
+                    total += self.position_values[i][j]
         return total * 10
     
     def get_random_weight(self):
