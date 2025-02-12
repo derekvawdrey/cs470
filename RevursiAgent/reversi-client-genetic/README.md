@@ -10,8 +10,19 @@ python reversi_python_client.py localhost 1 4 -0.9724278637348411 -0.95759179585
 
 will run the first client with the weights specified.
 
-To train 
+To train the bots, run the following command:
 
-## PULL REQUESTS ARE WELCOME
+```
+python genetic_trainer.py
+```
 
-![Reversi Board Image](https://upload.wikimedia.org/wikipedia/commons/a/ae/Othello_%28Reversi%29_board.jpg)
+This will run the genetic algorithm for 100 generations (can be changed in the genetic_trainer.py file). Every 5 generations, the best weights and fitness will be saved to a file. The weights can then be used to run the clients with the following command:
+
+```
+python reversi_python_client.py localhost 1 4 w_1 w_2 w_3 w_4 w_5 w_6
+```
+
+where w_1, w_2, w_3, w_4, w_5, and w_6 are the weights from the best individual in the last generation.
+
+
+

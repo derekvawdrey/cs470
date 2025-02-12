@@ -22,7 +22,7 @@ class GeneticTrainer:
             
             self.population.append({
                 'weights': weights,
-                'max_depth': random.randint(1, 5),
+                'max_depth': random.randint(1, 8),
                 'fitness': 0
             })
     
@@ -57,6 +57,8 @@ class GeneticTrainer:
             player2_pieces = np.count_nonzero(state.board == 2)
             print(f"Black pieces: {player1_pieces}")
             print(f"White pieces: {player2_pieces}")
+            print(f"Black max_depth: {bot1_max_depth}")
+            print(f"White max_depth: {bot2_max_depth}")
             print("===================")
         
         for game in range(self.games_per_match):
@@ -190,7 +192,7 @@ class GeneticTrainer:
         
         max_depth = individual['max_depth']
         if random.random() < mutation_rate:
-            max_depth = random.randint(1, 5)
+            max_depth = random.randint(1, 8)
         
         return {
             'weights': new_weights,
@@ -280,5 +282,5 @@ class GeneticTrainer:
             self.population = new_population
 
 if __name__ == "__main__":
-    trainer = GeneticTrainer(population_size=26, games_per_match=5)
+    trainer = GeneticTrainer(population_size=26, games_per_match=3)
     trainer.evolve(generations=100) 

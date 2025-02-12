@@ -63,6 +63,18 @@ class ReversiGameState:
         self.w_4 = w_4
         self.w_5 = w_5
         self.w_6 = w_6
+
+        self.position_values = np.array([
+            [1.00, 0.20, 0.70, 0.60, 0.60, 0.70, 0.20, 1.00],
+            [0.20, 0.10, 0.55, 0.50, 0.50, 0.55, 0.10, 0.20],
+            [0.70, 0.55, 0.60, 0.55, 0.55, 0.60, 0.55, 0.70],
+            [0.60, 0.50, 0.55, 0.50, 0.50, 0.55, 0.50, 0.60],
+            [0.60, 0.50, 0.55, 0.50, 0.50, 0.55, 0.50, 0.60],
+            [0.70, 0.55, 0.60, 0.55, 0.55, 0.60, 0.55, 0.70],
+            [0.20, 0.10, 0.55, 0.50, 0.50, 0.55, 0.10, 0.20],
+            [1.00, 0.20, 0.70, 0.60, 0.60, 0.70, 0.20, 1.00]
+        ])
+
     def clone_state(self):
         return ReversiGameState(self.board, self.turn, self.w_1, self.w_2, self.w_3, self.w_4, self.w_5, self.w_6)
 
@@ -86,20 +98,27 @@ class ReversiGameState:
                                        could_capture + 1)
 
     def simulate_move(self, move):
-        self.board_copy = self.board.copy()
-        self.board_copy[move[0], move[1]] = self.turn
-        for xdir in range(-1, 2):
-            for ydir in range(-1, 2):
-                if xdir == ydir == 0:
-                    continue
-                row = move[0] + ydir
-                col = move[1] + xdir
-                while self.capture_will_occur(row, col, xdir, ydir):
-                    self.board_copy[row, col] = self.turn
-                    row += ydir 
-                    col += xdir
+        board_copy = np.copy(self.board)
+        board_copy[move[0], move[1]] = self.turn
+        directions = [(dx, dy) for dx in range(-1, 2) for dy in range(-1, 2) if not (dx == 0 and dy == 0)]
         
-        self.board = self.board_copy
+        row = move[0]
+        col = move[1]
+        for dx, dy in directions:
+            curr_row = row + dy
+            curr_col = col + dx
+            
+            if self.capture_will_occur(curr_row, curr_col, dx, dy):
+                while True:
+                    if not (0 <= curr_row < self.board_dim and 0 <= curr_col < self.board_dim):
+                        break
+                    if board_copy[curr_row, curr_col] == 0 or board_copy[curr_row, curr_col] == self.turn:
+                        break
+                    board_copy[curr_row, curr_col] = self.turn
+                    curr_row += dy
+                    curr_col += dx
+        
+        self.board = board_copy
         return self.get_score(self.turn)
 
     def get_score(self, turn):
@@ -139,22 +158,12 @@ class ReversiGameState:
     def get_positional_weight(self, turn):
         if(self.w_5 < 0.1):
             return 0
-        positionValues = [
-            [1.00, 0.20, 0.70, 0.60, 0.60, 0.70, 0.20, 1.00],
-            [0.20, 0.10, 0.55, 0.50, 0.50, 0.55, 0.10, 0.20],
-            [0.70, 0.55, 0.60, 0.55, 0.55, 0.60, 0.55, 0.70],
-            [0.60, 0.50, 0.55, 0.50, 0.50, 0.55, 0.50, 0.60],
-            [0.60, 0.50, 0.55, 0.50, 0.50, 0.55, 0.50, 0.60],
-            [0.70, 0.55, 0.60, 0.55, 0.55, 0.60, 0.55, 0.70],
-            [0.20, 0.10, 0.55, 0.50, 0.50, 0.55, 0.10, 0.20],
-            [1.00, 0.20, 0.70, 0.60, 0.60, 0.70, 0.20, 1.00]
-        ]
 
         total = 0
         for i in range(self.board_dim):
             for j in range(self.board_dim):
                 if self.board[i, j] == turn:
-                    total += positionValues[i][j]
+                    total += self.positionValues[i][j]
         return total * 10
     
     def get_random_weight(self):
