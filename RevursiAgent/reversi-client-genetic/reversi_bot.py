@@ -17,7 +17,6 @@ class MiniMax:
         '''
         if self.max_depth == 0:
             return self.state.get_score(self.state.turn)
-        
         if maximizing_player:
             value = float("-inf")
         else:
@@ -44,6 +43,7 @@ class MiniMax:
                 self.beta = min(self.beta, value)
                 if value <= self.alpha:
                     break
+        self.cost = value
         return value
 
 class ReversiBot:
@@ -78,7 +78,7 @@ class ReversiBot:
         '''
         initial_beta = float("inf")
         initial_alpha = float("-inf")
-        root_node = MiniMax(state, None, None, 4, initial_alpha, initial_beta)
+        root_node = MiniMax(state, None, None, self.max_depth, initial_alpha, initial_beta)
         root_node.state.w_1 = self.w_1
         root_node.state.w_2 = self.w_2
         root_node.state.w_3 = self.w_3
@@ -86,18 +86,12 @@ class ReversiBot:
         root_node.state.w_5 = self.w_5
         root_node.state.w_6 = self.w_6
 
+        root_node.expand(True)
         best_score = float("-inf")
         best_move = None
-        
-        # find a move that maximizes the cost for initial alpha
-
-        for move in root_node.state.get_valid_moves():
-            new_state = root_node.state.clone_state()
-            new_state.simulate_move(move)
-            child_node = MiniMax(new_state, root_node, move, self.max_depth - 1, root_node.alpha, root_node.beta)
-            score = child_node.expand(True)
-            if score > best_score:
-                best_score = score
-                best_move = move
+        for child in root_node.children:
+            if child.cost > best_score:
+                best_score = child.cost
+                best_move = child.move
 
         return best_move

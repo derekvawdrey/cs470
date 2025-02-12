@@ -22,7 +22,7 @@ class GeneticTrainer:
             
             self.population.append({
                 'weights': weights,
-                'max_depth': random.randint(1, 8),
+                'max_depth': random.randint(1, 10),
                 'fitness': 0
             })
     
@@ -192,7 +192,7 @@ class GeneticTrainer:
         
         max_depth = individual['max_depth']
         if random.random() < mutation_rate:
-            max_depth = random.randint(1, 8)
+            max_depth = random.randint(1, 10)
         
         return {
             'weights': new_weights,
@@ -282,5 +282,5 @@ class GeneticTrainer:
             self.population = new_population
 
 if __name__ == "__main__":
-    trainer = GeneticTrainer(population_size=26, games_per_match=3)
+    trainer = GeneticTrainer(population_size=26, games_per_match=1)
     trainer.evolve(generations=100) 
