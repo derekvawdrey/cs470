@@ -33,25 +33,36 @@ class GeneticTrainer:
         bot1_timer = 60
         bot2_timer = 60
         
-        def print_board(board):
-            """Helper function to print board in a readable format"""
+        def print_board_and_stats(state, bot1_timer, bot2_timer):
+            """Helper function to print board and statistics"""
+            # Clear screen (works on most terminals)
+            print("\033[H\033[J")
+            
+            # Print board
             print("\n  0 1 2 3 4 5 6 7")
             for i in range(8):
                 row = [str(i)]
                 for j in range(8):
-                    if board[i][j] == 0:
+                    if state.board[i][j] == 0:
                         row.append('.')
-                    elif board[i][j] == 1:
+                    elif state.board[i][j] == 1:
                         row.append('●')
                     else:
                         row.append('○')
                 print(' '.join(row))
-            print()
+            
+            # Print statistics
+            print("\n=== Game Statistics ===")
+            print(f"Black (●) Time: {bot1_timer:.2f}s")
+            print(f"White (○) Time: {bot2_timer:.2f}s")
+            player1_pieces = np.count_nonzero(state.board == 1)
+            player2_pieces = np.count_nonzero(state.board == 2)
+            print(f"Black pieces: {player1_pieces}")
+            print(f"White pieces: {player2_pieces}")
+            print("===================")
         
         for game in range(self.games_per_match):
             print(f"\nStarting Game {game + 1}")
-            print(f"Bot 1 weights: {bot1_weights}")
-            print(f"Bot 2 weights: {bot2_weights}")
             
             # Create new game state with initial Reversi board setup
             initial_board = np.zeros((8, 8), dtype=int)
@@ -62,8 +73,6 @@ class GeneticTrainer:
             
             try:
                 state = ReversiGameState(initial_board, 1, 0, 0, 0, 0, 0, 0)
-                
-                # Create bots with their respective weights
                 bot1 = ReversiBot(0, bot1_max_depth, *bot1_weights)
                 bot2 = ReversiBot(0, bot2_max_depth, *bot2_weights)
                 
@@ -73,10 +82,8 @@ class GeneticTrainer:
                 
                 while True:
                     valid_moves = state.get_valid_moves()
-                    print(f"Valid moves for player {state.turn}: {valid_moves}")
                     
                     if not valid_moves:
-                        print(f"Player {state.turn} has no valid moves!")
                         no_valid_moves_count += 1
                         if no_valid_moves_count >= 2:
                             break
@@ -85,57 +92,55 @@ class GeneticTrainer:
                         current_bot = bot1 if state.turn == 1 else bot2
                         current_timer = bot1_timer if state.turn == 1 else bot2_timer
                         
-                        # Record start time before bot makes move
                         start_time = time.time()
                         
                         try:
                             move = current_bot.make_move(state)
-                            # Calculate time taken and update timer
                             time_taken = time.time() - start_time
                             
                             if state.turn == 1:
                                 bot1_timer -= time_taken
                                 if bot1_timer <= 0:
                                     print("Bot 1 ran out of time!")
-                                    return 0  # Bot 1 loses
-                            else:
-                                bot2_timer -= time_taken
-                                if bot2_timer <= 0:
-                                    print("Bot 2 ran out of time!")
-                                    return 1  # Bot 1 wins
-                            
-                            print(f"Bot chose move: {move}")
-                            print(f"Time remaining - Bot 1: {bot1_timer:.2f}s, Bot 2: {bot2_timer:.2f}s")
+                                    return 0
+                                else:
+                                    bot2_timer -= time_taken
+                                    if bot2_timer <= 0:
+                                        print("Bot 2 ran out of time!")
+                                        return 1
                             
                             if move:
                                 move_count += 1
                                 state.simulate_move(move)
-                                print_board(state.board)
+                                print_board_and_stats(state, bot1_timer, bot2_timer)
+                                time.sleep(0.1)  # Small delay to make the game visible
                             
                         except Exception as e:
                             print(f"Error during move: {e}")
-                            # If a bot errors out, it loses
                             return 0 if state.turn == 1 else 1
                     
-                    state.turn = 3 - state.turn  # Switch between 1 and 2
+                    state.turn = 3 - state.turn
                 
                 # Count pieces to determine winner
                 player1_pieces = np.count_nonzero(state.board == 1)
                 player2_pieces = np.count_nonzero(state.board == 2)
                 
                 print(f"\nGame {game + 1} finished!")
-                print(f"Final score - Player 1: {player1_pieces}, Player 2: {player2_pieces}")
+                print(f"Final score - Black: {player1_pieces}, White: {player2_pieces}")
                 
                 if player1_pieces > player2_pieces:
-                    print("Player 1 wins!")
+                    print("Black wins!")
                     bot1_wins += 1
                 elif player1_pieces == player2_pieces:
                     print("It's a draw!")
-                    bot1_wins += 0.5  # Draw counts as half a win
+                    bot1_wins += 0.5
                 else:
-                    print("Player 2 wins!")
+                    print("White wins!")
+                
+                time.sleep(1)  # Pause to show final result
                 
                 return bot1_wins / self.games_per_match
+                
             except Exception as e:
                 print(f"Error during game: {e}")
                 raise e
