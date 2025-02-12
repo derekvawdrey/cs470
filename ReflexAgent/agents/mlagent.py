@@ -20,10 +20,10 @@ def rotation_matrix(angle_radians):
 
 class MLAgent(Agent):
     def __init__(self):
-        model_path = './models/small17.pkl'
+        model_path = './models/small19.pkl'
         load_success = self.load(model_path)
         if not load_success:
-            df = pd.read_csv(f'./data/robot_recording_01-27-2025_10-17-12.csv')
+            df = pd.read_csv(f'./data/robot_recording_01-29-2025_11-44-09.csv')
 
             # Here is an example of feature engineering
             # This creates features to encode the robots rotation in radians and as well as in an xy heading format
@@ -39,7 +39,7 @@ class MLAgent(Agent):
                 'dist_sensor_8', 'dist_sensor_9', 'dist_sensor_10', 'dist_sensor_11',
                 'dist_sensor_12', 'dist_sensor_13', 'dist_sensor_14', 'dist_sensor_15'
             ]
-            df['blocked_forward'] = (df[sensor_columns[3:5]] < 6).any(axis=1).astype(int)
+            df['blocked_forward'] = (df[sensor_columns[3:6]] < 6).any(axis=1).astype(int)
             print(df.columns)
 
             default_features = ['robot_pos_x', 'robot_pos_y', 'robot_pos_theta', 'goal_pos_x',
@@ -89,7 +89,7 @@ class MLAgent(Agent):
             np.square(goal_pos[1] - robot_pos[1])
         ) > 3, 1, 0)
 
-        blocked_forward = int(np.any(np.array(dist_sensors[3:5]) < 6))
+        blocked_forward = int(np.any(np.array(dist_sensors[3:6]) < 6))
         print(blocked_forward)
         default_feature_vec = [*robot_pos, *goal_pos, *dist_sensors,robot_theta,robot_dir_x,robot_dir_y, distance_from_goal, blocked_forward]
         restricted_feature_vec = [*dist_sensors, robot_dir_x, robot_dir_y]

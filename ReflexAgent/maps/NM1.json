@@ -1,0 +1,28 @@
+{
+  "robot": {
+    "id": 0,
+    "color": [0, 0, 0.8],
+    "heading": [1, 0],
+    "position": [5, 5],
+    "radius": 2,
+    "spin": 40,
+    "speed": 4,
+    "bias": 0,
+    "sensor_range": 100
+  },
+  "goal": {
+    "id": 0,
+    "position": [95, 95],
+    "radius": 4
+  },
+  "obstacles": [
+    {"id": 0, "color": [0, 0, 0], "start_pos": [0, 0], "end_pos": [100, 0]},
+    {"id": 1, "color": [0, 0, 0], "start_pos": [100, 0], "end_pos": [100, 100]},
+    {"id": 2, "color": [0, 0, 0], "start_pos": [100, 100], "end_pos": [0, 100]},
+    {"id": 3, "color": [0, 0, 0], "start_pos": [0, 100], "end_pos": [0, 0]},
+    {"id": 4, "color": [0, 0, 0], "start_pos": [20, 0], "end_pos": [20, 80]},
+    {"id": 5, "color": [0, 0, 0], "start_pos": [40, 20], "end_pos": [40, 100]},
+    {"id": 6, "color": [0, 0, 0], "start_pos": [60, 0], "end_pos": [60, 80]},
+    {"id": 7, "color": [0, 0, 0], "start_pos": [80, 20], "end_pos": [80, 100]}
+  ]
+}

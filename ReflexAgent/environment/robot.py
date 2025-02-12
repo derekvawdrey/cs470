@@ -9,6 +9,7 @@ from .utils import minimized_angle
 class RobotArtist:
     def __init__(self):
         self.artists = {}
+        self.is_hitting_obstacle = False
 
     def setup(self, robot, obstacles):
         self.artists["core"] = plt.Circle(
@@ -28,12 +29,16 @@ class RobotArtist:
             arrowstyle='->',
             linewidth=2
         )
+        cc = (1.0,1.0,0.5)
+        if(self.is_hitting_obstacle):
+            cc = (1.0,0.0,0.0)
+        heading_color = cc
         self.artists["heading"] = ConnectionPatch(
                 robot.position, 
                 robot.position + robot.heading * robot.radius, 
                 'data', 
                 'data', 
-                color=(1.0, 1.0, 0.5), 
+                color=heading_color, 
                 arrowstyle='->',
                 linewidth=2
             )
@@ -57,15 +62,34 @@ class RobotArtist:
             *self.artists['sensor_bars']
         ]
 
-
     def update(self, robot, obstacles):
+        # Get sensor readings
+        sensor_bars = robot.get_sensor_reading(obstacles)
+        
+        # Calculate distances for sensors 3 and 4 (front sensors)
+        distances = []
+        for i in [3, 4, 5]:
+            dist = np.linalg.norm(sensor_bars[i].end_pos - sensor_bars[i].start_pos)
+            distances.append(dist)
+            print(dist)
+        
+        # Update collision state
+        self.is_hitting_obstacle = bool(int(np.any(np.array(distances) < 6)))
+        
+        # Update core position
         self.artists["core"].center = robot.position
+        
+        # Update command arrow
         command = robot.command_trajectory if robot.command_trajectory is not None else np.zeros(2)
         self.artists["command"].xy1 = robot.position
         self.artists["command"].xy2 = robot.position + command * robot.radius * 2
+        
+        # Update heading arrow with collision-dependent color
         self.artists["heading"].xy1 = robot.position
         self.artists["heading"].xy2 = robot.position + robot.heading * robot.radius
-        sensor_bars = robot.get_sensor_reading(obstacles)
+        self.artists["heading"].set_color((1.0, 0.0, 0.0) if self.is_hitting_obstacle else (1.0, 1.0, 0.5))
+        
+        # Update sensor bars
         for i, sensor_bar in enumerate(sensor_bars):
             self.artists[f'sensor_bars'][i].xy1 = sensor_bar.start_pos
             self.artists[f'sensor_bars'][i].xy2 = sensor_bar.end_pos
