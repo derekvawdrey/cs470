@@ -18,24 +18,23 @@ class GeneticTrainer:
     def initialize_population(self):
         """Initialize random population of bots with different weights"""
         for _ in range(self.population_size):
-            # Generate random weights between -1 and 1
             weights = [random.uniform(-1, 1) for _ in range(6)]
             
             self.population.append({
                 'weights': weights,
-                'max_depth': random.randint(1, 10),
+                'max_depth': random.randint(1, 5),
                 'fitness': 0
             })
     
     def evaluate_fitness(self, bot1_weights, bot2_weights, bot1_max_depth, bot2_max_depth):
         """Play multiple games between two bots and return win ratio for bot1"""
         bot1_wins = 0
-        bot1_timer = 60  # Black's timer
-        bot2_timer = 60  # White's timer
+        bot1_timer = 60
+        bot2_timer = 60
         
         def print_board_and_stats(state, bot1_timer, bot2_timer):
             """Helper function to print board and statistics"""
-            # Clear screen (works on most terminals)
+            # Clear screen
             print("\033[H\033[J")
             
             # Print board
@@ -51,7 +50,6 @@ class GeneticTrainer:
                         row.append('○')
                 print(' '.join(row))
             
-            # Print statistics
             print("\n=== Game Statistics ===")
             print(f"Black (●) Time: {bot1_timer:.2f}s")
             print(f"White (○) Time: {bot2_timer:.2f}s")
@@ -64,7 +62,6 @@ class GeneticTrainer:
         for game in range(self.games_per_match):
             print(f"\nStarting Game {game + 1}")
             
-            # Create new game state with initial Reversi board setup
             initial_board = np.zeros((8, 8), dtype=int)
             initial_board[3][3] = 1
             initial_board[3][4] = 2
@@ -76,7 +73,6 @@ class GeneticTrainer:
                 bot1 = ReversiBot(0, bot1_max_depth, *bot1_weights)
                 bot2 = ReversiBot(0, bot2_max_depth, *bot2_weights)
                 
-                current_player = 1
                 no_valid_moves_count = 0
                 move_count = 0
                 
@@ -90,15 +86,12 @@ class GeneticTrainer:
                     else:
                         no_valid_moves_count = 0
                         current_bot = bot1 if state.turn == 1 else bot2
-                        current_timer = bot1_timer if state.turn == 1 else bot2_timer
-                        
                         start_time = time.time()
                         
                         try:
                             move = current_bot.make_move(state)
                             time_taken = time.time() - start_time
                             
-                            # Only subtract time from the current player's timer
                             if state.turn == 1:
                                 bot1_timer -= time_taken
                                 if bot1_timer <= 0:
@@ -114,7 +107,7 @@ class GeneticTrainer:
                                 move_count += 1
                                 state.simulate_move(move)
                                 print_board_and_stats(state, bot1_timer, bot2_timer)
-                                time.sleep(0.1)  # Small delay to make the game visible
+                                time.sleep(0.1)
                             
                         except Exception as e:
                             print(f"Error during move: {e}")
@@ -122,7 +115,6 @@ class GeneticTrainer:
                     
                     state.turn = 3 - state.turn
                 
-                # Count pieces to determine winner
                 player1_pieces = np.count_nonzero(state.board == 1)
                 player2_pieces = np.count_nonzero(state.board == 2)
                 
@@ -138,7 +130,7 @@ class GeneticTrainer:
                 else:
                     print("White wins!")
                 
-                time.sleep(1)  # Pause to show final result
+                time.sleep(1)
                 
                 return bot1_wins / self.games_per_match
                 
@@ -169,17 +161,25 @@ class GeneticTrainer:
         return max(tournament, key=lambda x: x['fitness'])
     
     def crossover(self, parent1, parent2):
-        """Create child by combining parents' weights"""
+        """Create child by combining parents' weights and max_depth"""
         child_weights = []
         for w1, w2 in zip(parent1['weights'], parent2['weights']):
             if random.random() < 0.5:
                 child_weights.append(w1)
             else:
                 child_weights.append(w2)
-        return {'weights': child_weights, 'fitness': 0}
+        
+        # Inherit max_depth from one of the parents
+        max_depth = parent1['max_depth'] if random.random() < 0.5 else parent2['max_depth']
+        
+        return {
+            'weights': child_weights,
+            'max_depth': max_depth,
+            'fitness': 0
+        }
     
     def mutate(self, individual, mutation_rate=0.1, mutation_range=0.2):
-        """Randomly mutate weights"""
+        """Randomly mutate weights and possibly max_depth"""
         new_weights = []
         for weight in individual['weights']:
             if random.random() < mutation_rate:
@@ -187,7 +187,16 @@ class GeneticTrainer:
                 new_weights.append(weight + mutation)
             else:
                 new_weights.append(weight)
-        return {'weights': new_weights, 'fitness': 0}
+        
+        max_depth = individual['max_depth']
+        if random.random() < mutation_rate:
+            max_depth = random.randint(1, 5)
+        
+        return {
+            'weights': new_weights,
+            'max_depth': max_depth,
+            'fitness': 0
+        }
     
     def save_progress(self, generation, best_weights, best_fitness, best_max_depth):
         """Save the training progress to a file"""
@@ -271,5 +280,5 @@ class GeneticTrainer:
             self.population = new_population
 
 if __name__ == "__main__":
-    trainer = GeneticTrainer(population_size=2, games_per_match=4)
+    trainer = GeneticTrainer(population_size=26, games_per_match=5)
     trainer.evolve(generations=100) 

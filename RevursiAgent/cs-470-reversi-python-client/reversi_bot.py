@@ -1,22 +1,6 @@
 import random as rand
 
-from enum import Enum
-
-
-class CostType(Enum):
-    '''
-        The cost type to use for the MiniMaxTree.
-    '''
-    PIECE_COUNT = 1
-    CORNER_WEIGHT = 2
-    MOBILITY = 3
-    FLIPABILITY = 4
-    POSITION_WEIGHT = 5
-
 class MiniMaxNode:
-    '''
-        A node in the MiniMaxTree.
-    '''
     def __init__(self, state, parent: 'MiniMaxNode', move: tuple, max_depth: int, alpha, beta):
         self.state = state
         self.parent = parent

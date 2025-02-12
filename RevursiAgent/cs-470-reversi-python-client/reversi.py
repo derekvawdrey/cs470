@@ -134,7 +134,7 @@ class ReversiGameState:
     def get_stability(self):
         if(self.w_4 < 0.1):
             return 0
-        return random.randint(1,100)
+        return 100 * (self.get_positional_weight(self.turn) - self.get_positional_weight(3 - self.turn)) / (self.get_positional_weight(self.turn) + self.get_positional_weight(3 - self.turn))
 
     def get_positional_weight(self, turn):
         if(self.w_5 < 0.1):
