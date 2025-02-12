@@ -1,7 +1,7 @@
 import random as rand
 
-class MiniMaxNode:
-    def __init__(self, state, parent: 'MiniMaxNode', move: tuple, max_depth: int, alpha, beta):
+class MiniMax:
+    def __init__(self, state, parent: 'MiniMax', move: tuple, max_depth: int, alpha, beta):
         self.state = state
         self.parent = parent
         self.move = move
@@ -31,7 +31,7 @@ class MiniMaxNode:
             new_state = self.state.clone_state()
             new_state.simulate_move(move)
 
-            child_node = MiniMaxNode(new_state, self, move, self.max_depth - 1, self.alpha, self.beta)
+            child_node = MiniMax(new_state, self, move, self.max_depth - 1, self.alpha, self.beta)
             self.children.append(child_node)
 
             if maximizing_player:
@@ -78,7 +78,7 @@ class ReversiBot:
         '''
         initial_beta = float("inf")
         initial_alpha = float("-inf")
-        root_node = MiniMaxNode(state, None, None, 4, initial_alpha, initial_beta)
+        root_node = MiniMax(state, None, None, 4, initial_alpha, initial_beta)
         root_node.state.w_1 = self.w_1
         root_node.state.w_2 = self.w_2
         root_node.state.w_3 = self.w_3
@@ -94,7 +94,7 @@ class ReversiBot:
         for move in root_node.state.get_valid_moves():
             new_state = root_node.state.clone_state()
             new_state.simulate_move(move)
-            child_node = MiniMaxNode(new_state, root_node, move, self.max_depth - 1, root_node.alpha, root_node.beta)
+            child_node = MiniMax(new_state, root_node, move, self.max_depth - 1, root_node.alpha, root_node.beta)
             score = child_node.expand(True)
             if score > best_score:
                 best_score = score
