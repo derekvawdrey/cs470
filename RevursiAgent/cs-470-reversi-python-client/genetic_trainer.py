@@ -61,8 +61,8 @@ class GeneticTrainer:
                 state = ReversiGameState(initial_board, 1, 0, 0, 0, 0, 0, 0)
                 
                 # Create bots with their respective weights
-                bot1 = ReversiBot(0, *bot1_weights)
-                bot2 = ReversiBot(0, *bot2_weights)
+                bot1 = ReversiBot(0, bot1_max_depth, *bot1_weights)
+                bot2 = ReversiBot(0, bot2_max_depth, *bot2_weights)
                 
                 current_player = 1
                 no_valid_moves_count = 0
