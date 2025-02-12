@@ -5,6 +5,7 @@ from reversi import ReversiGameState
 import copy
 import json
 import os
+import time
 
 class GeneticTrainer:
     def __init__(self, population_size=50, games_per_match=10):
@@ -29,6 +30,8 @@ class GeneticTrainer:
     def evaluate_fitness(self, bot1_weights, bot2_weights, bot1_max_depth, bot2_max_depth):
         """Play multiple games between two bots and return win ratio for bot1"""
         bot1_wins = 0
+        bot1_timer = 60
+        bot2_timer = 60
         
         def print_board(board):
             """Helper function to print board in a readable format"""
@@ -80,14 +83,40 @@ class GeneticTrainer:
                     else:
                         no_valid_moves_count = 0
                         current_bot = bot1 if state.turn == 1 else bot2
-                        move = current_bot.make_move(state)
-                        print(f"Bot chose move: {move}")
+                        current_timer = bot1_timer if state.turn == 1 else bot2_timer
                         
-                        if move:
-                            move_count += 1
-                            state.simulate_move(move)
-                            print_board(state.board)
+                        # Record start time before bot makes move
+                        start_time = time.time()
                         
+                        try:
+                            move = current_bot.make_move(state)
+                            # Calculate time taken and update timer
+                            time_taken = time.time() - start_time
+                            
+                            if state.turn == 1:
+                                bot1_timer -= time_taken
+                                if bot1_timer <= 0:
+                                    print("Bot 1 ran out of time!")
+                                    return 0  # Bot 1 loses
+                            else:
+                                bot2_timer -= time_taken
+                                if bot2_timer <= 0:
+                                    print("Bot 2 ran out of time!")
+                                    return 1  # Bot 1 wins
+                            
+                            print(f"Bot chose move: {move}")
+                            print(f"Time remaining - Bot 1: {bot1_timer:.2f}s, Bot 2: {bot2_timer:.2f}s")
+                            
+                            if move:
+                                move_count += 1
+                                state.simulate_move(move)
+                                print_board(state.board)
+                            
+                        except Exception as e:
+                            print(f"Error during move: {e}")
+                            # If a bot errors out, it loses
+                            return 0 if state.turn == 1 else 1
+                    
                     state.turn = 3 - state.turn  # Switch between 1 and 2
                 
                 # Count pieces to determine winner
