@@ -11,10 +11,11 @@ if __name__ == '__main__':
     w_4 = float(sys.argv[7])
     w_5 = float(sys.argv[8])
     w_6 = float(sys.argv[9])
+    w_7 = float(sys.argv[10])
 
-    print(f"w_1: {w_1}, w_2: {w_2}, w_3: {w_3}, w_4: {w_4}, w_5: {w_5}, w_6: {w_6}")
+    print(f"w_1: {w_1}, w_2: {w_2}, w_3: {w_3}, w_4: {w_4}, w_5: {w_5}, w_6: {w_6}, w_7: {w_7}")
 
-    reversi_game = reversi.ReversiGame(server_address, bot_move_number, max_depth, w_1, w_2, w_3, w_4, w_5, w_6)
+    reversi_game = reversi.ReversiGame(server_address, bot_move_number, max_depth, w_1, w_2, w_3, w_4, w_5, w_6, w_7)
     reversi_game.play()
 
 

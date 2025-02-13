@@ -47,7 +47,7 @@ class MiniMax:
         return value
 
 class ReversiBot:
-    def __init__(self, move_num, max_depth, w_1, w_2, w_3, w_4, w_5, w_6):
+    def __init__(self, move_num, max_depth, w_1, w_2, w_3, w_4, w_5, w_6, w_7):
         self.move_num = move_num
         self.max_depth = max_depth
         self.w_1 = float(w_1) 
@@ -56,7 +56,7 @@ class ReversiBot:
         self.w_4 = float(w_4)
         self.w_5 = float(w_5)
         self.w_6 = float(w_6)
-        
+        self.w_7 = float(w_7)
     def make_move(self, state):
         '''
         This is the only function that needs to be implemented for the lab!
@@ -85,7 +85,7 @@ class ReversiBot:
         root_node.state.w_4 = self.w_4
         root_node.state.w_5 = self.w_5
         root_node.state.w_6 = self.w_6
-
+        root_node.state.w_7 = self.w_7
         root_node.expand(True)
         best_score = float("-inf")
         best_move = None

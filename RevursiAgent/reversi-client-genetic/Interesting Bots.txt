@@ -1,0 +1,8 @@
+Black weights: 
+    Coin parity: -0.8956311428470107
+    Mobility: 0.49140215863826886
+    Corners Captured: 0.7677119063409197
+    Stability: -0.32596344531238874
+    Positional Weight: 0.3921553302819032
+    Random: 0.1730898536417731
+    Frontier Discs: 0.23035676647550937

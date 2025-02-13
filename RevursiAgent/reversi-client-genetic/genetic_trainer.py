@@ -1,3 +1,4 @@
+import math
 import random
 import numpy as np
 from reversi_bot import ReversiBot
@@ -18,11 +19,11 @@ class GeneticTrainer:
     def initialize_population(self):
         """Initialize random population of bots with different weights"""
         for _ in range(self.population_size):
-            weights = [random.uniform(-1, 1) for _ in range(6)]
+            weights = [random.uniform(-1, 1) for _ in range(7)]
             
             self.population.append({
                 'weights': weights,
-                'max_depth': random.randint(1, 10),
+                'max_depth': random.randint(1, 6),
                 'fitness': 0
             })
     
@@ -59,6 +60,22 @@ class GeneticTrainer:
             print(f"White pieces: {player2_pieces}")
             print(f"Black max_depth: {bot1_max_depth}")
             print(f"White max_depth: {bot2_max_depth}")
+            print(f"Black weights: ")
+            print(f"    Coin parity: {bot1_weights[0]}")
+            print(f"    Mobility: {bot1_weights[1]}")
+            print(f"    Corners Captured: {bot1_weights[2]}")
+            print(f"    Stability: {bot1_weights[3]}")
+            print(f"    Positional Weight: {bot1_weights[4]}")
+            print(f"    Random: {bot1_weights[5]}")
+            print(f"    Frontier Discs: {bot1_weights[6]}")
+            print(f"White weights:")
+            print(f"    Coin parity: {bot2_weights[0]}")
+            print(f"    Mobility: {bot2_weights[1]}")
+            print(f"    Corners Captured: {bot2_weights[2]}")
+            print(f"    Stability: {bot2_weights[3]}")
+            print(f"    Positional Weight: {bot2_weights[4]}")
+            print(f"    Random: {bot2_weights[5]}")
+            print(f"    Frontier Discs: {bot2_weights[6]}")
             print("===================")
         
         for game in range(self.games_per_match):
@@ -71,7 +88,7 @@ class GeneticTrainer:
             initial_board[4][4] = 1
             
             try:
-                state = ReversiGameState(initial_board, 1, 0, 0, 0, 0, 0, 0)
+                state = ReversiGameState(initial_board, 1, 0, 0, 0, 0, 0, 0, 0)
                 bot1 = ReversiBot(0, bot1_max_depth, *bot1_weights)
                 bot2 = ReversiBot(0, bot2_max_depth, *bot2_weights)
                 
@@ -192,7 +209,7 @@ class GeneticTrainer:
         
         max_depth = individual['max_depth']
         if random.random() < mutation_rate:
-            max_depth = random.randint(1, 10)
+            max_depth += math.floor(random.uniform(-1, 1))
         
         return {
             'weights': new_weights,
@@ -282,5 +299,5 @@ class GeneticTrainer:
             self.population = new_population
 
 if __name__ == "__main__":
-    trainer = GeneticTrainer(population_size=26, games_per_match=1)
+    trainer = GeneticTrainer(population_size=20, games_per_match=1)
     trainer.evolve(generations=100) 

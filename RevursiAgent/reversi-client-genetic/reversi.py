@@ -19,12 +19,12 @@ class ReversiServerConnection:
 
         # If the game is over
         if turn == -999:
-            return ReversiGameState(None, turn,0,0,0,0,0,0)
+            return ReversiGameState(None, turn,0,0,0,0,0,0,0)
 
         # Flip is necessary because of the way the server does indexing
         board = np.flip(np.array([int(x) for x in server_msg[4:68]]).reshape(8, 8), 0)
 
-        return ReversiGameState(board, turn,0,0,0,0,0,0)
+        return ReversiGameState(board, turn,0,0,0,0,0,0,0)
 
     def send_move(self, move):
         # The 7 - bit is necessary because of the way the server does indexing
@@ -32,10 +32,10 @@ class ReversiServerConnection:
         self.sock.send(move_str.encode('utf-8'))
 
 class ReversiGame:
-    def __init__(self, host, bot_move_num, max_depth, w_1, w_2, w_3, w_4, w_5, w_6):
+    def __init__(self, host, bot_move_num, max_depth, w_1, w_2, w_3, w_4, w_5, w_6, w_7):
         self.bot_move_num = bot_move_num
         self.server_conn = ReversiServerConnection(host, bot_move_num)
-        self.bot = reversi_bot.ReversiBot(bot_move_num, max_depth, w_1, w_2, w_3, w_4, w_5, w_6)
+        self.bot = reversi_bot.ReversiBot(bot_move_num, max_depth, w_1, w_2, w_3, w_4, w_5, w_6, w_7)
 
     def play(self):
         while True:
@@ -52,7 +52,7 @@ class ReversiGame:
                 self.server_conn.send_move(move)
 
 class ReversiGameState:
-    def __init__(self, board, turn, w_1, w_2, w_3, w_4, w_5, w_6):
+    def __init__(self, board, turn, w_1, w_2, w_3, w_4, w_5, w_6, w_7):
         self.board_dim = 8 # Reversi is played on an 8x8 board
         self.board = board
         self.turn = turn # Whose turn is it
@@ -63,7 +63,7 @@ class ReversiGameState:
         self.w_4 = w_4
         self.w_5 = w_5
         self.w_6 = w_6
-
+        self.w_7 = w_7
         self.position_values = np.array([
             [1.00, 0.20, 0.70, 0.60, 0.60, 0.70, 0.20, 1.00],
             [0.20, 0.10, 0.55, 0.50, 0.50, 0.55, 0.10, 0.20],
@@ -76,7 +76,7 @@ class ReversiGameState:
         ])
 
     def clone_state(self):
-        return ReversiGameState(self.board, self.turn, self.w_1, self.w_2, self.w_3, self.w_4, self.w_5, self.w_6)
+        return ReversiGameState(self.board, self.turn, self.w_1, self.w_2, self.w_3, self.w_4, self.w_5, self.w_6, self.w_7)
 
     def capture_will_occur(self, row, col, xdir, ydir, could_capture=0):
         # We shouldn't be able to leave the board
@@ -127,7 +127,8 @@ class ReversiGameState:
                self.w_3 * self.corners_captured(turn) + \
                self.w_4 * self.get_stability() + \
                self.w_5 * self.get_positional_weight(turn) + \
-               self.w_6 * self.get_random_weight()
+               self.w_6 * self.get_random_weight() + \
+               self.w_7 * self.frontier_discs(turn)
 
     def get_piece_count(self, player):
         return np.sum(self.board == player)
@@ -153,7 +154,10 @@ class ReversiGameState:
     def get_stability(self):
         if(self.w_4 < 0.1):
             return 0
-        return 100 * (self.get_positional_weight(self.turn) - self.get_positional_weight(3 - self.turn)) / (self.get_positional_weight(self.turn) + self.get_positional_weight(3 - self.turn))
+        divisor = (self.get_positional_weight(self.turn) + self.get_positional_weight(3 - self.turn))
+        if divisor == 0:
+            return 0
+        return 100 * (self.get_positional_weight(self.turn) - self.get_positional_weight(3 - self.turn)) / divisor
 
     def get_positional_weight(self, turn):
         if(self.w_5 < 0.1):
@@ -171,6 +175,22 @@ class ReversiGameState:
             return 0
         return random.randint(1,100)
 
+    def frontier_discs(self, player):
+        if self.w_7 < 0.1:
+            return 0
+        frontier_count = 0
+        directions = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]
+        
+        for row in range(self.board_dim):
+            for col in range(self.board_dim):
+                if self.board[row, col] == player:
+                    for dx, dy in directions:
+                        adj_row, adj_col = row + dy, col + dx
+                        if self.space_is_on_board(adj_row, adj_col) and self.space_is_unoccupied(adj_row, adj_col):
+                            frontier_count += 1
+                            break
+
+        return frontier_count * 2
     
     def change_turn(self):
         self.turn = 3 - self.turn
