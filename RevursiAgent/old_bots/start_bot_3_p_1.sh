@@ -3,7 +3,7 @@
 source /Users/derekvawdrey/Workspace/school/cs270/venv/bin/activate
 
 # Start both Python clients with daemon flag
-python reversi-client-genetic/reversi_python_client.py localhost 1 4 -0.9724278637348411 -0.9575917958507336 0.49051641446111605 -0.11043431912527724 0.9305262003315051 0.005978367003628637 
+python reversi-client-genetic/reversi_python_client.py localhost 1 7 -0.972 -0.958 0.491 -0.110 0.931 0.006 0
 
 # Deactivate the virtual environment
 deactivate 

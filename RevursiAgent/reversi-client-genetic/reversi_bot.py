@@ -89,9 +89,14 @@ class ReversiBot:
         root_node.expand(True)
         best_score = float("-inf")
         best_move = None
-        for child in root_node.children:
-            if child.cost > best_score:
-                best_score = child.cost
-                best_move = child.move
+
+        if self.w_6 == 1:
+            best_move = rand.choice(root_node.children)
+            return best_move.move
+        else:
+            for child in root_node.children:
+                if child.cost > best_score:
+                    best_score = child.cost
+                    best_move = child.move
 
         return best_move

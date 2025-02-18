@@ -15,23 +15,31 @@ class GeneticTrainer:
         self.population = []
         self.best_weights_history = []
         self.initialize_population()
+        self.file_name = "training_progress_TEST_" + str(random.randint(1, 1000000)) + ".json"        
         
     def initialize_population(self):
         """Initialize random population of bots with different weights"""
+        rng = np.random.default_rng()
         for _ in range(self.population_size):
-            weights = [random.uniform(-1, 1) for _ in range(7)]
-            
+            weights = [rng.uniform(0, 1) for _ in range(7)]
+            # The 6th weight is the random weight, which is a number between 1 and 100 so I dont want it to be huge
+            weights[5] = rng.uniform(0, 0.4)
+            # Stability being the 4th weight, if it is active (greater than 0.2) I want to cap the max_depth at 5
+            if weights[3] > 0.2:
+                max_depth = random.randint(1, 5)
+            else:
+                max_depth = random.randint(1, 8)
             self.population.append({
                 'weights': weights,
-                'max_depth': random.randint(1, 6),
+                'max_depth': max_depth,
                 'fitness': 0
             })
     
     def evaluate_fitness(self, bot1_weights, bot2_weights, bot1_max_depth, bot2_max_depth):
         """Play multiple games between two bots and return win ratio for bot1"""
         bot1_wins = 0
-        bot1_timer = 60
-        bot2_timer = 60
+        bot1_timer = 180
+        bot2_timer = 180
         
         def print_board_and_stats(state, bot1_timer, bot2_timer):
             """Helper function to print board and statistics"""
@@ -228,7 +236,7 @@ class GeneticTrainer:
         }
         
         try:
-            with open('training_progress.json', 'r') as f:
+            with open(self.file_name, 'r') as f:
                 old_progress = json.load(f)
                 progress['weights_history'] = old_progress.get('weights_history', [])
         except FileNotFoundError:
@@ -242,13 +250,13 @@ class GeneticTrainer:
             'max_depth': best_max_depth
         })
         
-        with open('training_progress.json', 'w') as f:
+        with open(self.file_name, 'w') as f:
             json.dump(progress, f)
     
     def load_progress(self):
         """Load previous training progress if it exists"""
-        if os.path.exists('training_progress.json'):
-            with open('training_progress.json', 'r') as f:
+        if os.path.exists(self.file_name):
+            with open(self.file_name, 'r') as f:
                 data = json.load(f)
                 return data
         return None
@@ -280,7 +288,7 @@ class GeneticTrainer:
             print(f"Best weights: {self.population[0]['weights']}")
             
             # Save progress every 5 generations
-            if generation % 5 == 0:
+            if generation % 1 == 0:
                 self.save_progress(generation, self.population[0]['weights'], self.population[0]['fitness'], self.population[0]['max_depth'])
             
             # Create new population
@@ -299,5 +307,5 @@ class GeneticTrainer:
             self.population = new_population
 
 if __name__ == "__main__":
-    trainer = GeneticTrainer(population_size=20, games_per_match=1)
-    trainer.evolve(generations=100) 
+    trainer = GeneticTrainer(population_size=6, games_per_match=1)
+    trainer.evolve(generations=10) 

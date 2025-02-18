@@ -75,6 +75,17 @@ class ReversiGameState:
             [1.00, 0.20, 0.70, 0.60, 0.60, 0.70, 0.20, 1.00]
         ])
 
+        self.position_values2 = np.array([
+            [100, -15, 55, 40, 40, 55, -15, 100],
+            [-15, -35, -20, 5, 5, -20, -35, -15],
+            [55, -20, 10, 10, 10, 10, -20, 55],
+            [40, 5, 10, -15, -15, 10, 5, 40],
+            [40, 5, 10, -15, -15, 10, 5, 40],
+            [55, -20, 10, 10, 10, 10, -20, 55],
+            [-15, -35, -20, 5, 5, -20, -35, -15],
+            [100, -15, 55, 40, 40, 55, -15, 100]
+        ])
+
     def clone_state(self):
         return ReversiGameState(self.board, self.turn, self.w_1, self.w_2, self.w_3, self.w_4, self.w_5, self.w_6, self.w_7)
 
@@ -125,7 +136,7 @@ class ReversiGameState:
         return self.w_1 * self.coin_parity(turn) + \
                self.w_2 * self.mobility(turn) + \
                self.w_3 * self.corners_captured(turn) + \
-               self.w_4 * self.get_stability() + \
+               self.w_4 * self.get_stability(turn) + \
                self.w_5 * self.get_positional_weight(turn) + \
                self.w_6 * self.get_random_weight() + \
                self.w_7 * self.frontier_discs(turn)
@@ -134,30 +145,43 @@ class ReversiGameState:
         return np.sum(self.board == player)
     
     def coin_parity(self,player):
-        if(self.w_1 < 0.1):
+        if(self.w_1 < 0.2):
             return 0
         return 100 * (self.get_piece_count(player) - self.get_piece_count(3 - player)) / (self.get_piece_count(player) + self.get_piece_count(3 - player))
 
     def mobility(self,player):
-        if(self.w_2 < 0.1):
+        if(self.w_2 < 0.2):
             return 0
         return 100 * len(self.get_valid_moves()) / (self.board_dim * self.board_dim)
 
     def corners_captured(self, player):
-        if(self.w_3 < 0.1):
+        if(self.w_3 < 0.2):
             return 0
         return 25 * (self.board[0, 0] == player) + \
                25 * (self.board[0, 7] == player) + \
                25 * (self.board[7, 0] == player) + \
                25 * (self.board[7, 7] == player)
     
-    def get_stability(self):
-        if(self.w_4 < 0.1):
+    def get_stability(self, player):
+        if self.w_4 < 0.2:
             return 0
-        divisor = (self.get_positional_weight(self.turn) + self.get_positional_weight(3 - self.turn))
-        if divisor == 0:
-            return 0
-        return 100 * (self.get_positional_weight(self.turn) - self.get_positional_weight(3 - self.turn)) / divisor
+            
+        user_stable = 0
+        for i in range(self.board_dim):
+            for j in range(self.board_dim):
+                if self.board[i, j] == player:
+                    user_stable += self.position_values2[i][j]
+
+        enemy_stable = 0
+        for i in range(self.board_dim):
+            for j in range(self.board_dim):
+                if self.board[i, j] == 3 - player:
+                    enemy_stable += self.position_values2[i][j]
+        
+        return (user_stable - enemy_stable) / 10
+        
+        
+        
 
     def get_positional_weight(self, turn):
         if(self.w_5 < 0.1):
@@ -168,12 +192,14 @@ class ReversiGameState:
             for j in range(self.board_dim):
                 if self.board[i, j] == turn:
                     total += self.position_values[i][j]
-        return total * 10
+        return total / 100
     
     def get_random_weight(self):
         if(self.w_6 < 0.1):
             return 0
-        return random.randint(1,100)
+        rng = np.random.default_rng()
+        ran_num = rng.uniform(0, 100)
+        return ran_num
 
     def frontier_discs(self, player):
         if self.w_7 < 0.1:
